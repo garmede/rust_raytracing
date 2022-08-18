@@ -39,6 +39,10 @@ pub fn normalize(v: Vec3) -> Vec3 {
     v / v.length_squared()
 }
 
+pub fn lerp(x: Vec3, y: Vec3, t: f64) -> Vec3 {
+    (1.0 - t) * x + t * y
+}
+
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 // -Vec3

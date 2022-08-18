@@ -10,21 +10,27 @@ use vec3::Point3;
 use vec3::Vec3;
 
 fn ray_color(r: &Ray) -> Color {
-    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-        return Color::new(1.0, 0.0, 0.0);
+    let mut t = hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r);
+    if t > 0.0 {
+        let N = vec3::normalize(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
+        return 0.5 * Color::new(N.x + 1.0, N.y + 1.0, N.z + 1.0);
     }
     let unit_direction = vec3::normalize(r.dir);
-    let t = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+    t = 0.5 * (unit_direction.y + 1.0);
+    vec3::lerp(Color::new(1.0, 1.0, 1.0), Color::new(0.5, 0.7, 1.0), t)
 }
 
-fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> bool {
+fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64 {
     let oc = r.orig - center;
-    let a = vec3::dot(r.dir, r.dir);
-    let b = 2.0 * vec3::dot(oc, r.dir);
-    let c = vec3::dot(oc, oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    let a = r.dir.length_squared();
+    let half_b = vec3::dot(oc, r.dir);
+    let c = oc.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    if discriminant < 0.0 {
+        return -1.0;
+    } else {
+        return (-half_b - discriminant.sqrt()) / a;
+    }
 }
 
 fn main() {
@@ -65,6 +71,6 @@ fn main() {
         }
     }
 
-    imgbuf.save("render/03_red_sphere.png").unwrap();
+    imgbuf.save("render/04_normal_sphere.png").unwrap();
     print!("\nDone.\n");
 }
