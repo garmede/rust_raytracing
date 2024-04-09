@@ -66,9 +66,9 @@ fn ray_color(r: Ray) -> Vec3 {
         return (n + 1.0) / 2.0;
     }
 
-    // let unit_direction = r.direction().unit_vector();
-    // let a = 0.5 * (unit_direction.y + 1.0);
-    Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+    let unit_direction = r.direction().unit_vector();
+    let a = 0.5 * (unit_direction.y + 1.0);
+    Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
 }
 
 fn hit_sphere(center: Vec3, radius: f32, r: Ray) -> f32 {
