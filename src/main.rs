@@ -1,10 +1,6 @@
-// mod color;
-// mod ray;
-// mod vec3;
-
 use image::ImageBuffer;
-use rayracing::Ray;
-use rayracing::Vec3;
+use raytracing_lib::Ray;
+use raytracing_lib::Vec3;
 
 fn main() {
     // 이미지 높이를 계산하고 1 이상인지 확인.
@@ -47,15 +43,19 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(r);
 
             let pixel = imgbuf.get_pixel_mut(x, y);
 
-            *pixel = color::write_color(pixel_color);
+            *pixel = to_rgb(raytracing_lib::color::write_color(pixel_color))
         }
     }
     eprintln!("\r완료!                                ");
     imgbuf.save("result.png").unwrap();
+}
+
+fn to_rgb(color: Vec3) -> image::Rgb<u8> {
+    image::Rgb([color.x as u8, color.y as u8, color.z as u8])
 }
 
 fn ray_color(r: Ray) -> Vec3 {
@@ -63,11 +63,11 @@ fn ray_color(r: Ray) -> Vec3 {
     let ray = Ray::new(r.origin(), r.direction());
     if t > 0.0 {
         let n = Vec3::unit_vector(ray.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        return Vec3::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0) / 2.0;
+        return (n + 1.0) / 2.0;
     }
 
-    let unit_direction = r.direction().unit_vector();
-    let a = 0.5 * (unit_direction.y() + 1.0);
+    // let unit_direction = r.direction().unit_vector();
+    // let a = 0.5 * (unit_direction.y + 1.0);
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
 }
 

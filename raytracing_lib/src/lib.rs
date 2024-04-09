@@ -1,6 +1,9 @@
-pub mod vec3;
-pub mod ray;
+mod vec3;
+mod ray;
 pub mod color;
+
+pub use vec3::Vec3;
+pub use ray::Ray;
 
 // pub fn add(left: usize, right: usize) -> usize {
 //     left + right

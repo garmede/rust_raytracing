@@ -1,4 +1,4 @@
-workspace = { members = ["raytracing"] }
+workspace = { members = ["raytracing_lib"] }
 
 [package]
 name = "raytracing_rust"
@@ -9,3 +9,4 @@ edition = "2021"
 
 [dependencies]
 image = "*"
+raytracing_lib = { path = "raytracing_lib" }
