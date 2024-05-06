@@ -1,5 +1,5 @@
+use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
-use crate::hittable::{Hittable, HitRecord};
 
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
@@ -19,21 +19,19 @@ impl HittableList {
     pub fn clear(&mut self) {
         self.objects.clear();
     }
+}
 
-    pub fn hit(&mut self, r: Ray, t_min: f64, t_max: f64, rec: HitRecord) -> (bool, HitRecord) {
+impl Hittable for HittableList {
+    fn hit(&mut self, r: &Ray, t_min: &f64, t_max: &mut f64, rec: &mut HitRecord) -> bool {
         let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        let mut temp_rec = rec;
 
         for object in self.objects.iter_mut() {
-            let (hit, rec) = object.hit(r, t_min, closest_so_far, temp_rec);
-            if hit {
+            if object.hit(r, t_min, t_max, rec) {
                 hit_anything = true;
-                closest_so_far = rec.t;
-                temp_rec = rec;
+                *t_max = rec.t;
             }
         }
 
-        (hit_anything, temp_rec)
+        hit_anything
     }
 }

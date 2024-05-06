@@ -1,45 +1,39 @@
-use raytracing_lib::hittable;
+use raytracing_lib::hittable::{Hittable, HitRecord};
+use raytracing_lib::vec3::Vec3;
+use raytracing_lib::ray::Ray;
 
 pub struct Sphere {
-    center: Vec3,
-    radius: f64,
+    pub center: Vec3,
+    pub radius: f64,
 }
 
 impl Hittable for Sphere {
-    fn hit(&mut self, r: Ray, t_min: f64, t_max: f64, rec: HitRecord) -> (bool, HitRecord) {
-        let oc = r.origin() - self.center;
+    fn hit(&mut self, r: &Ray, ray_tmin: &f64, ray_tmax: &mut f64, rec: &mut HitRecord) -> bool {
+        let oc = self.center - r.origin();
         let a = r.direction().length_squared();
-        let half_b = oc.dot(r.direction());
+        let h = oc.dot(&r.direction());
         let c = oc.length_squared() - self.radius * self.radius;
 
-        let discriminant = half_b * half_b - a * c;
+        let discriminant = h * h - a * c;
         if discriminant < 0.0 {
-            return (false, rec);
+            return false;
         }
 
         let sqrtd = discriminant.sqrt();
 
         // Find the nearest root that lies in the acceptable range.
-        let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || t_max < root {
-            root = (-half_b + sqrtd) / a;
-            if root < t_min || t_max < root {
-                return (false, rec);
+        let mut root = (h - sqrtd) / a;
+        if root <= *ray_tmin || *ray_tmax <= root {
+            root = (h + sqrtd) / a;
+            if root <= *ray_tmin || *ray_tmax <= root {
+                return false;
             }
         }
 
-        let mut new_rec = HitRecord {
-            p: r.at(rec.t),
-            normal: Vec3::new(0.0, 0.0, 0.0),
-            t: root,
-            front_face: false,
-        };
+        rec.t = root;
+        rec.p = r.at(rec.t);
+        rec.normal = (rec.p - self.center) / self.radius;
 
-        let outward_normal = (new_rec.p - self.center) / self.radius;
-        new_rec.set_face_normal(r, outward_normal);
-
-        new_rec.normal = (new_rec.p - self.center) / self.radius;
-
-        (true, new_rec)
+        true
     }
 }

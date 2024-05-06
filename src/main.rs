@@ -1,6 +1,10 @@
 use image::ImageBuffer;
+use raytracing_lib::hittable::{HitRecord, Hittable};
+use raytracing_lib::hittable_list::HittableList;
 use raytracing_lib::ray::Ray;
 use raytracing_lib::vec3::Vec3;
+mod sphere;
+use sphere::Sphere;
 
 fn main() {
     // 이미지 높이를 계산하고 1 이상인지 확인.
@@ -13,6 +17,16 @@ fn main() {
         image_height_aspect
     };
     let height_digit = image_height.to_string().len();
+
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 0.0, -1.0),
+        radius: 0.5,
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, -100.5, -1.0),
+        radius: 100.0,
+    }));
 
     // 카메라
     let focal_length = 1.0;
@@ -43,7 +57,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(r);
+            let pixel_color = ray_color(&r, &mut world);
 
             let pixel = imgbuf.get_pixel_mut(x, y);
 
@@ -51,36 +65,23 @@ fn main() {
         }
     }
     eprintln!("\r완료!                                ");
-    imgbuf.save("result.png").unwrap();
+    imgbuf.save("result2.png").unwrap();
 }
 
 fn to_rgb(color: Vec3) -> image::Rgb<u8> {
     image::Rgb([color.x as u8, color.y as u8, color.z as u8])
 }
 
-fn ray_color(r: Ray) -> Vec3 {
-    let t = hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-    let ray = Ray::new(r.origin(), r.direction());
-    if t > 0.0 {
-        let n = Vec3::unit_vector(ray.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        return (n + 1.0) / 2.0;
+fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
+    let mut rec = HitRecord::new();
+    let zero = 0.0;
+    let mut infinity = f64::INFINITY;
+    if world.hit(r, &zero, &mut infinity, &mut rec) {
+        return (rec.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5;
     }
 
+    // 배경 그라디언트
     let unit_direction = r.direction().unit_vector();
     let a = 0.5 * (unit_direction.y + 1.0);
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
-}
-
-fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> f64 {
-    let oc = r.origin() - center;
-    let a = r.direction().length_squared();
-    let half_b = oc.dot(r.direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-
-    return if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    };
 }
