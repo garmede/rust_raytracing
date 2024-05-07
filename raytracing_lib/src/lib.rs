@@ -3,6 +3,7 @@ pub mod ray;
 pub mod hittable;
 pub mod hittable_list;
 pub mod color;
+pub mod interval;
 
 // pub use vec3::Vec3;
 // pub use ray::Ray;

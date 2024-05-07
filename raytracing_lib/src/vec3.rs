@@ -104,3 +104,43 @@ impl Div<f64> for Vec3 {
         Vec3::new(self.x / t, self.y / t, self.z / t)
     }
 }
+
+pub struct Float3(f64, f64, f64);
+
+pub fn dot(a: Float3, b: Float3) -> f64 {
+    a.0 * b.0 + a.1 * b.1 + a.2 * b.2
+}
+
+impl Float3 {
+    pub fn length_squared(&self) -> f64 {
+        self.0 * self.0 + self.1 * self.1 + self.2 * self.2
+    }
+
+    pub fn length(&self) -> f64 {
+        self.length_squared().sqrt()
+    }
+
+    pub fn set_x(&mut self, _x: f64) {
+        self.0 = _x;
+    }
+
+    pub fn set_y(&mut self, _y: f64) {
+        self.1 = _y;
+    }
+
+    pub fn set_z(&mut self, _z: f64) {
+        self.2 = _z;
+    }
+
+    pub fn x(&self) -> f64 {
+        self.0
+    }
+
+    pub fn y(&self) -> f64 {
+        self.1
+    }
+
+    pub fn z(&self) -> f64 {
+        self.2
+    }
+}
