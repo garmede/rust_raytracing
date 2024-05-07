@@ -1,8 +1,5 @@
 // use image::ImageBuffer;
-use raytracing_lib::hittable::{HitRecord, Hittable};
-use raytracing_lib::hittable_list::HittableList;
-use raytracing_lib::ray::Ray;
-use raytracing_lib::vec3::Vec3;
+use raytracing_lib::{hittable::*, hittable_list::HittableList, interval::*, ray::Ray, vec3::Vec3};
 mod sphere;
 use sphere::Sphere;
 
@@ -48,8 +45,6 @@ fn main() {
         camera_center - Vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) / 2.0;
 
-    // let mut imgbuf = ImageBuffer::new(image_width, image_height);
-
     let mut writer = set_encoder("result1.png", IMAGE_WIDTH, IMAGE_HEIGHT);
     let mut imgbuf = [0u8; IMAGE_PIXELS];
 
@@ -62,9 +57,6 @@ fn main() {
             let r = Ray::new(camera_center, ray_direction);
 
             let pixel_color = ray_color(&r, &mut world);
-
-            // let pixel = imgbuf.get_pixel_mut(x, y);
-            // *pixel = to_rgb(raytracing_lib::color::write_color(pixel_color))
 
             let color = raytracing_lib::color::write_color(pixel_color);
             write_buffer(&mut imgbuf, &color, x, y, IMAGE_WIDTH);
@@ -90,15 +82,9 @@ fn write_buffer(_buf: &mut [u8], _color: &Vec3, x: u32, y: u32, width: u32) {
     _buf[index + 2] = _color.z() as u8;
 }
 
-// fn to_rgb(color: Vec3) -> image::Rgb<u8> {
-//     image::Rgb([color.x() as u8, color.y() as u8, color.z() as u8])
-// }
-
 fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
     let mut rec = HitRecord::new();
-    let zero = 0.0;
-    let mut infinity = f64::INFINITY;
-    if world.hit(r, &zero, &mut infinity, &mut rec) {
+    if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
         return (rec.normal + Vec3(1.0, 1.0, 1.0)) * 0.5;
     }
 

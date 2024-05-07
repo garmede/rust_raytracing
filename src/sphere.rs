@@ -1,6 +1,7 @@
 use raytracing_lib::hittable::*;
-use raytracing_lib::vec3::*;
+use raytracing_lib::interval::*;
 use raytracing_lib::ray::Ray;
+use raytracing_lib::vec3::*;
 
 pub struct Sphere {
     pub center: Vec3,
@@ -8,7 +9,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&mut self, r: &Ray, ray_tmin: &f64, ray_tmax: &mut f64, rec: &mut HitRecord) -> bool {
+    fn hit(&mut self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let oc = self.center - r.origin();
         let a = r.direction().length_squared();
         let h = dot(&oc, &r.direction());
@@ -23,12 +24,18 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range.
         let mut root = (h - sqrtd) / a;
-        if root <= *ray_tmin || *ray_tmax <= root {
+        if !ray_t.surrounds(root) {
             root = (h + sqrtd) / a;
-            if root <= *ray_tmin || *ray_tmax <= root {
+            if !ray_t.surrounds(root) {
                 return false;
             }
         }
+        // if root <= *ray_tmin || *ray_tmax <= root {
+        //     root = (h + sqrtd) / a;
+        //     if root <= *ray_tmin || *ray_tmax <= root {
+        //         return false;
+        //     }
+        // }
 
         rec.t = root;
         rec.p = r.at(rec.t);
