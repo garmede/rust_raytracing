@@ -1,5 +1,5 @@
-use raytracing_lib::hittable::{Hittable, HitRecord};
-use raytracing_lib::vec3::Vec3;
+use raytracing_lib::hittable::*;
+use raytracing_lib::vec3::*;
 use raytracing_lib::ray::Ray;
 
 pub struct Sphere {
@@ -11,7 +11,7 @@ impl Hittable for Sphere {
     fn hit(&mut self, r: &Ray, ray_tmin: &f64, ray_tmax: &mut f64, rec: &mut HitRecord) -> bool {
         let oc = self.center - r.origin();
         let a = r.direction().length_squared();
-        let h = oc.dot(&r.direction());
+        let h = dot(&oc, &r.direction());
         let c = oc.length_squared() - self.radius * self.radius;
 
         let discriminant = h * h - a * c;
