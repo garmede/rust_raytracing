@@ -3,7 +3,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::Vec3;
+use crate::vec3::*;
 use rand::prelude::*;
 
 pub struct Camera {
@@ -41,13 +41,6 @@ impl Camera {
         for y in 0..self.image_height {
             eprint!("\r남은 스캔라인: {}", self.image_height - y);
             for x in 0..self.image_width {
-                // let pixel_center = self.pixel00_loc
-                //     + (self.pixel_delta_u * x as f64)
-                //     + (self.pixel_delta_v * y as f64);
-                // let ray_direction = pixel_center - self.center;
-                // let r = Ray::new(self.center, ray_direction);
-
-                // let pixel_color = Self::ray_color(&r, world);
                 let mut pixel_color = Vec3(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let r = self.get_ray(x, y);
@@ -95,13 +88,15 @@ impl Camera {
         let mut encoder = png::Encoder::new(file, self.image_width, self.image_height);
         encoder.set_color(png::ColorType::Rgb);
         encoder.set_depth(png::BitDepth::Eight);
+
         encoder.write_header().unwrap()
     }
 
     fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
         let mut rec = HitRecord::new();
         if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
-            return (rec.normal + Vec3(1.0, 1.0, 1.0)) * 0.5;
+            let direction = random_on_hamisphere(&rec.normal);
+            return Self::ray_color(&Ray::new(rec.p, direction), world) * 0.5;
         }
 
         // 배경 그라디언트
@@ -115,8 +110,8 @@ impl Camera {
         // 원점에서 시작하고 픽셀 위치 x, y 주변에서 무작위로 샘플링된 지점을 향하는 카메라 레이를 생성합니다.
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
-            + (self.pixel_delta_u * offset.x() + x as f64)
-            + (self.pixel_delta_v * offset.y() + y as f64);
+            + (self.pixel_delta_u * (offset.x() + x as f64))
+            + (self.pixel_delta_v * (offset.y() + y as f64));
         let ray_direction = pixel_sample - self.center;
 
         Ray::new(self.center, ray_direction)

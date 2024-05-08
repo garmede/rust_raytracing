@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 
 #[derive(Copy, Clone)]
@@ -12,8 +13,8 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    pub fn unit_vector(self) -> Vec3 {
-        self / self.length()
+    pub fn unit_vector(&self) -> Vec3 {
+        *self / self.length()
     }
 
     pub fn set_x(&mut self, _x: f64) {
@@ -38,6 +39,40 @@ impl Vec3 {
 
     pub fn z(&self) -> f64 {
         self.2
+    }
+}
+
+pub fn random_vec3() -> Vec3 {
+    Vec3(random::<f64>(), random::<f64>(), random::<f64>())
+}
+
+pub fn random_vec3_range(min: f64, max: f64) -> Vec3 {
+    Vec3(
+        thread_rng().gen_range(min..max),
+        thread_rng().gen_range(min..max),
+        thread_rng().gen_range(min..max),
+    )
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = random_vec3_range(-1.0, 1.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit_vector()
+}
+
+pub fn random_on_hamisphere(normal: &Vec3) -> Vec3 {
+    let on_unit_sphere = random_unit_vector();
+    if dot(&on_unit_sphere, normal) > 0.0 {
+        return on_unit_sphere;
+    } else {
+        return -on_unit_sphere;
     }
 }
 

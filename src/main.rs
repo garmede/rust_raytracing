@@ -18,8 +18,8 @@ fn main() {
     // 카메라
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
-    let sampler_per_pixel = 10;
+    let sampler_per_pixel = 100;
     let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel);
 
-    camera.render(&mut world, "result2.png");
+    camera.render(&mut world, "result1.png");
 }

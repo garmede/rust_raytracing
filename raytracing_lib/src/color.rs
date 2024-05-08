@@ -6,7 +6,7 @@ pub fn write_color(_buf: &mut Vec<u8>, _color: &Vec3) {
     let g = _color.y();
     let b = _color.z();
 
-    const INTENSITY: Interval = Interval { min: 0.0, max: 1.0 };
+    const INTENSITY: Interval = Interval { min: 0.0, max: 0.999 };
 
     let rbyte = (INTENSITY.clamp(r) * 256.0) as u8;
     let gbyte = (INTENSITY.clamp(g) * 256.0) as u8;
