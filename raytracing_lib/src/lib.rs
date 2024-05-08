@@ -5,8 +5,4 @@ pub mod hittable_list;
 pub mod color;
 pub mod camera;
 pub mod interval;
-
-// pub use vec3::Vec3;
-// pub use ray::Ray;
-// pub use hittable::Sphere;
-// pub use hittable_list::HittableList;
+pub mod utility;

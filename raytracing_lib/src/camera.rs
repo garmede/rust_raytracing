@@ -4,24 +4,29 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use rand::prelude::*;
 
 pub struct Camera {
-    pub aspect_ratio: f64, // 종횡비
-    pub image_width: u32,  // 이미지 너비
-    image_height: u32,     // 이미지 높이
-    center: Vec3,          // 카메라 중심
-    pixel00_loc: Vec3,     // 0,0 픽셀 위치
-    pixel_delta_u: Vec3,   // 오른쪽으로 오프셋될 픽셀
-    pixel_delta_v: Vec3,   // 아래로 오프셋될 픽셀
-    image_buf: Vec<u8>,    // 이미지 버퍼
+    pub aspect_ratio: f64,     // 이미지 너비와 높이의 비율
+    pub image_width: u32,      // 렌더링될 이미지 너비(픽셀 수)
+    pub sample_per_pixel: u32, // 각 픽셀의 무작위 샘플 수
+    image_height: u32,         // 이미지 높이
+    pixel_samples_scale: f64,  // 픽셀 샘플 합계에 대한 색상 배율
+    center: Vec3,              // 카메라 중심
+    pixel00_loc: Vec3,         // 0,0 픽셀 위치
+    pixel_delta_u: Vec3,       // 오른쪽으로 오프셋될 픽셀
+    pixel_delta_v: Vec3,       // 아래로 오프셋될 픽셀
+    image_buf: Vec<u8>,        // 이미지 버퍼
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32) -> Self {
         Self {
             aspect_ratio,
             image_width,
+            sample_per_pixel,
             image_height: 0,
+            pixel_samples_scale: 0.0,
             center: Vec3(0.0, 0.0, 0.0),
             pixel00_loc: Vec3(0.0, 0.0, 0.0),
             pixel_delta_u: Vec3(0.0, 0.0, 0.0),
@@ -33,29 +38,22 @@ impl Camera {
     pub fn render(&mut self, world: &mut HittableList, path: &str) {
         let mut writer = self.initialize(path);
 
-        fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
-            let mut rec = HitRecord::new();
-            if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
-                return (rec.normal + Vec3(1.0, 1.0, 1.0)) * 0.5;
-            }
-
-            // 배경 그라디언트
-            let unit_direction = r.direction().unit_vector();
-            let a = 0.5 * (unit_direction.y() + 1.0);
-
-            Vec3(1.0, 1.0, 1.0) * (1.0 - a) + Vec3(0.5, 0.7, 1.0) * a
-        }
-
         for y in 0..self.image_height {
             eprint!("\r남은 스캔라인: {}", self.image_height - y);
             for x in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + (self.pixel_delta_u * x as f64)
-                    + (self.pixel_delta_v * y as f64);
-                let ray_direction = pixel_center - self.center;
-                let r = Ray::new(self.center, ray_direction);
+                // let pixel_center = self.pixel00_loc
+                //     + (self.pixel_delta_u * x as f64)
+                //     + (self.pixel_delta_v * y as f64);
+                // let ray_direction = pixel_center - self.center;
+                // let r = Ray::new(self.center, ray_direction);
 
-                let pixel_color = ray_color(&r, world);
+                // let pixel_color = Self::ray_color(&r, world);
+                let mut pixel_color = Vec3(0.0, 0.0, 0.0);
+                for _ in 0..self.sample_per_pixel {
+                    let r = self.get_ray(x, y);
+                    pixel_color += Self::ray_color(&r, world);
+                }
+                pixel_color *= self.pixel_samples_scale;
                 write_color(&mut self.image_buf, &pixel_color);
             }
         }
@@ -70,6 +68,8 @@ impl Camera {
         if self.image_height < 1 {
             self.image_height = 1;
         }
+
+        self.pixel_samples_scale = 1.0 / self.sample_per_pixel as f64;
 
         self.center = Vec3(0.0, 0.0, 0.0);
 
@@ -96,5 +96,34 @@ impl Camera {
         encoder.set_color(png::ColorType::Rgb);
         encoder.set_depth(png::BitDepth::Eight);
         encoder.write_header().unwrap()
+    }
+
+    fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
+        let mut rec = HitRecord::new();
+        if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
+            return (rec.normal + Vec3(1.0, 1.0, 1.0)) * 0.5;
+        }
+
+        // 배경 그라디언트
+        let unit_direction = r.direction().unit_vector();
+        let a = 0.5 * (unit_direction.y() + 1.0);
+
+        Vec3(1.0, 1.0, 1.0) * (1.0 - a) + Vec3(0.5, 0.7, 1.0) * a
+    }
+
+    fn get_ray(&self, x: u32, y: u32) -> Ray {
+        // 원점에서 시작하고 픽셀 위치 x, y 주변에서 무작위로 샘플링된 지점을 향하는 카메라 레이를 생성합니다.
+        let offset = Self::sample_square();
+        let pixel_sample = self.pixel00_loc
+            + (self.pixel_delta_u * offset.x() + x as f64)
+            + (self.pixel_delta_v * offset.y() + y as f64);
+        let ray_direction = pixel_sample - self.center;
+
+        Ray::new(self.center, ray_direction)
+    }
+
+    fn sample_square() -> Vec3 {
+        // [-.5,-.5]-[+.5,+.5] 단위 사각형 내의 무작위 점에 대한 벡터를 반환합니다.
+        Vec3(random::<f64>() - 0.5, random::<f64>() - 0.5, 0.0)
     }
 }

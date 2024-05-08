@@ -1,5 +1,6 @@
-// use image::ImageBuffer;
-use raytracing_lib::{camera::Camera, hittable_list::HittableList, vec3::Vec3};
+use raytracing_lib::{
+    camera::Camera, hittable_list::HittableList, vec3::Vec3,
+};
 mod sphere;
 use sphere::Sphere;
 
@@ -17,7 +18,8 @@ fn main() {
     // 카메라
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
-    let mut camera = Camera::new(aspect_ratio, image_width);
+    let sampler_per_pixel = 10;
+    let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel);
 
-    camera.render(&mut world, "result1.png");
+    camera.render(&mut world, "result2.png");
 }
