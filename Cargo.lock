@@ -74,12 +74,14 @@ dependencies = [
 [[package]]
 name = "raytracing_lib"
 version = "0.1.0"
+dependencies = [
+ "png",
+]
 
 [[package]]
 name = "rust_raytracing"
 version = "0.1.0"
 dependencies = [
- "png",
  "raytracing_lib",
 ]
 

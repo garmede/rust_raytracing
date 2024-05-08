@@ -10,5 +10,4 @@ authors = ["Young Gon Cha <garmede@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-png = "0.17.13"
 raytracing_lib = { path = "raytracing_lib" }
