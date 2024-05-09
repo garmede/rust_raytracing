@@ -15,29 +15,50 @@ pub struct Camera {
     pub sample_per_pixel: u32, // 각 픽셀의 무작위 샘플 수
     pub max_depth: u32,        // 재귀 깊이
     pub vfov: f64,             // 수직 시야각
+    pub lookfrom: Vec3,        // 카메라 위치
+    pub lookat: Vec3,          // 카메라가 바라보는 위치
+    pub vup: Vec3,             // 카메라의 상단 방향
     image_height: u32,         // 이미지 높이
     pixel_samples_scale: f64,  // 픽셀 샘플 합계에 대한 색상 배율
     center: Vec3,              // 카메라 중심
     pixel00_loc: Vec3,         // 0,0 픽셀 위치
     pixel_delta_u: Vec3,       // 오른쪽으로 오프셋될 픽셀
     pixel_delta_v: Vec3,       // 아래로 오프셋될 픽셀
+    u: Vec3,                   // 카메라의 수평 방향
+    v: Vec3,                   // 카메라의 수직 방향
+    w: Vec3,                   // 카메라의 전방 방향
     image_buf: Vec<u8>,        // 이미지 버퍼
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32, max_depth: u32, vfov: f64) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        sample_per_pixel: u32,
+        max_depth: u32,
+        vfov: f64,
+        lookfrom: Vec3,
+        lookat: Vec3,
+        vup: Vec3,
+    ) -> Self {
         Self {
             aspect_ratio,
             image_width,
             sample_per_pixel,
             max_depth,
             vfov,
+            lookfrom,
+            lookat,
+            vup,
             image_height: 0,
             pixel_samples_scale: 0.0,
             center: Vec3(0.0, 0.0, 0.0),
             pixel00_loc: Vec3(0.0, 0.0, 0.0),
             pixel_delta_u: Vec3(0.0, 0.0, 0.0),
             pixel_delta_v: Vec3(0.0, 0.0, 0.0),
+            u: Vec3(0.0, 0.0, 0.0),
+            v: Vec3(0.0, 0.0, 0.0),
+            w: Vec3(0.0, 0.0, 0.0),
             image_buf: vec![],
         }
     }
@@ -71,18 +92,23 @@ impl Camera {
 
         self.pixel_samples_scale = 1.0 / self.sample_per_pixel as f64;
 
-        self.center = Vec3(0.0, 0.0, 0.0);
+        self.center = self.lookfrom;
 
         // 뷰포트 크기를 결정합니다.
-        const FOCAL_LENGTH: f64 = 1.0;
+        let focal_length = (self.lookfrom - self.lookat).length();
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * FOCAL_LENGTH;
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
+        // 카메라 좌표계의 u,v,w 단위 기저 벡터를 계산합니다.
+        self.w = (self.lookfrom - self.lookat).unit_vector();
+        self.u = cross(&self.vup, &self.w).unit_vector();
+        self.v = cross(&self.w, &self.u);
+
         // 수평 및 수직 뷰포트 가장자리 아래의 벡터를 계산합니다.
-        let viewport_u = Vec3(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3(0.0, -viewport_height, 0.0);
+        let viewport_u = self.u * viewport_width;
+        let viewport_v = -self.v * viewport_height;
 
         // 픽셀 간 수평 및 수직 델타 벡터를 계산합니다.
         self.pixel_delta_u = viewport_u / self.image_width as f64;
@@ -90,7 +116,7 @@ impl Camera {
 
         // 좌측 상단 픽셀의 위치를 ​​계산합니다.
         let viewport_upper_left =
-            self.center - Vec3(0.0, 0.0, FOCAL_LENGTH) - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.w * focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
 
         let file = std::fs::File::create(path).unwrap();
