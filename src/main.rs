@@ -22,5 +22,5 @@ fn main() {
     let max_depth = 50;
     let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel, max_depth);
 
-    camera.render(&mut world, "result10.png");
+    camera.render(&mut world, "result12.png");
 }

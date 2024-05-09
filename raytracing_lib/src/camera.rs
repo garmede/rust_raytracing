@@ -102,7 +102,7 @@ impl Camera {
         let mut rec = HitRecord::new();
         if world.hit(r, &Interval::new(0.001, f64::INFINITY), &mut rec) {
             let direction = rec.normal + random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
+            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.1;
         }
 
         // 배경 그라디언트
