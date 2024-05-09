@@ -14,6 +14,7 @@ pub struct Camera {
     pub image_width: u32,      // 렌더링될 이미지 너비(픽셀 수)
     pub sample_per_pixel: u32, // 각 픽셀의 무작위 샘플 수
     pub max_depth: u32,        // 재귀 깊이
+    pub vfov: f64,             // 수직 시야각
     image_height: u32,         // 이미지 높이
     pixel_samples_scale: f64,  // 픽셀 샘플 합계에 대한 색상 배율
     center: Vec3,              // 카메라 중심
@@ -24,12 +25,13 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32, max_depth: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32, max_depth: u32, vfov: f64) -> Self {
         Self {
             aspect_ratio,
             image_width,
             sample_per_pixel,
             max_depth,
+            vfov,
             image_height: 0,
             pixel_samples_scale: 0.0,
             center: Vec3(0.0, 0.0, 0.0),
@@ -73,12 +75,14 @@ impl Camera {
 
         // 뷰포트 크기를 결정합니다.
         const FOCAL_LENGTH: f64 = 1.0;
-        const VIEWPORT_HEIGHT: f64 = 2.0;
-        let viewport_width = VIEWPORT_HEIGHT * (self.image_width as f64 / self.image_height as f64);
+        let theta = self.vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * FOCAL_LENGTH;
+        let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
         // 수평 및 수직 뷰포트 가장자리 아래의 벡터를 계산합니다.
         let viewport_u = Vec3(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3(0.0, -VIEWPORT_HEIGHT, 0.0);
+        let viewport_v = Vec3(0.0, -viewport_height, 0.0);
 
         // 픽셀 간 수평 및 수직 델타 벡터를 계산합니다.
         self.pixel_delta_u = viewport_u / self.image_width as f64;
