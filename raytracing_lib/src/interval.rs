@@ -45,12 +45,12 @@ impl Interval {
     }
 }
 
-pub const EMPTY: Interval = Interval {
-    min: std::f64::INFINITY,
-    max: std::f64::NEG_INFINITY,
-};
+// pub const EMPTY: Interval = Interval {
+//     min: std::f64::INFINITY,
+//     max: std::f64::NEG_INFINITY,
+// };
 
-pub const UNIVERSE: Interval = Interval {
-    min: std::f64::NEG_INFINITY,
-    max: std::f64::INFINITY,
-};
+// pub const UNIVERSE: Interval = Interval {
+//     min: std::f64::NEG_INFINITY,
+//     max: std::f64::INFINITY,
+// };

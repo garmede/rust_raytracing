@@ -1,10 +1,5 @@
+use raytracing_lib::*;
 use std::rc::Rc;
-
-use raytracing_lib::hittable::*;
-use raytracing_lib::interval::*;
-use raytracing_lib::material::*;
-use raytracing_lib::ray::Ray;
-use raytracing_lib::vec3::*;
 
 pub struct Sphere {
     center: Vec3,
@@ -49,7 +44,7 @@ impl Hittable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, &outward_normal);
-        rec.mat = self.mat.clone();
+        rec.mat = Rc::clone(&self.mat);
 
         true
     }

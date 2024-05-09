@@ -102,7 +102,7 @@ impl Camera {
     }
 
     fn ray_color(r: &Ray, depth: u32, world: &mut HittableList) -> Vec3 {
-        if depth == 0 {
+        if depth <= 0 {
             return Vec3(0.0, 0.0, 0.0);
         }
 
