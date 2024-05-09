@@ -85,6 +85,13 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     *v - *n * 2.0 * dot(v, n)
 }
 
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = dot(&-*uv, n).min(1.0);
+    let r_out_perp = (*uv + *n * cos_theta) * etai_over_etat;
+    let r_out_parallel = *n * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
+    r_out_perp + r_out_parallel
+}
+
 pub fn dot(a: &Vec3, b: &Vec3) -> f64 {
     a.0 * b.0 + a.1 * b.1 + a.2 * b.2
 }
