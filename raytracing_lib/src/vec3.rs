@@ -47,6 +47,10 @@ impl Vec3 {
     }
 }
 
+pub fn random_double() -> f64 {
+    random::<f64>()
+}
+
 pub fn random_vec3() -> Vec3 {
     Vec3(random::<f64>(), random::<f64>(), random::<f64>())
 }
