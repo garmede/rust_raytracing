@@ -18,6 +18,8 @@ pub struct Camera {
     pub lookfrom: Vec3,        // 카메라 위치
     pub lookat: Vec3,          // 카메라가 바라보는 위치
     pub vup: Vec3,             // 카메라의 상단 방향
+    pub defocus_angle: f64,    // 카메라의 초점 각도
+    pub focus_dist: f64,       // 초점 거리
     image_height: u32,         // 이미지 높이
     pixel_samples_scale: f64,  // 픽셀 샘플 합계에 대한 색상 배율
     center: Vec3,              // 카메라 중심
@@ -27,6 +29,8 @@ pub struct Camera {
     u: Vec3,                   // 카메라의 수평 방향
     v: Vec3,                   // 카메라의 수직 방향
     w: Vec3,                   // 카메라의 전방 방향
+    defocus_disk_u: Vec3,      // 초점 디스크의 수평 방향
+    defocus_disk_v: Vec3,      // 초점 디스크의 수직 방향
     image_buf: Vec<u8>,        // 이미지 버퍼
 }
 
@@ -40,6 +44,8 @@ impl Camera {
         lookfrom: Vec3,
         lookat: Vec3,
         vup: Vec3,
+        defocus_angle: f64,
+        focus_dist: f64,
     ) -> Self {
         Self {
             aspect_ratio,
@@ -50,6 +56,8 @@ impl Camera {
             lookfrom,
             lookat,
             vup,
+            defocus_angle,
+            focus_dist,
             image_height: 0,
             pixel_samples_scale: 0.0,
             center: Vec3(0.0, 0.0, 0.0),
@@ -59,6 +67,8 @@ impl Camera {
             u: Vec3(0.0, 0.0, 0.0),
             v: Vec3(0.0, 0.0, 0.0),
             w: Vec3(0.0, 0.0, 0.0),
+            defocus_disk_u: Vec3(0.0, 0.0, 0.0),
+            defocus_disk_v: Vec3(0.0, 0.0, 0.0),
             image_buf: vec![],
         }
     }
@@ -95,10 +105,9 @@ impl Camera {
         self.center = self.lookfrom;
 
         // 뷰포트 크기를 결정합니다.
-        let focal_length = (self.lookfrom - self.lookat).length();
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_dist;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
         // 카메라 좌표계의 u,v,w 단위 기저 벡터를 계산합니다.
@@ -116,8 +125,14 @@ impl Camera {
 
         // 좌측 상단 픽셀의 위치를 ​​계산합니다.
         let viewport_upper_left =
-            self.center - (self.w * focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.w * self.focus_dist) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
+
+        // 카메라 초점 디스크의 기저 벡터를 계산합니다.
+        let defocus_radius = self.focus_dist * (self.defocus_angle / 2.0).to_radians().tan();
+
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
 
         let file = std::fs::File::create(path).unwrap();
         let mut encoder = png::Encoder::new(file, self.image_width, self.image_height);
@@ -153,18 +168,31 @@ impl Camera {
     }
 
     fn get_ray(&self, x: u32, y: u32) -> Ray {
-        // 원점에서 시작하고 픽셀 위치 x, y 주변에서 무작위로 샘플링된 지점을 향하는 카메라 레이를 생성합니다.
+        // 초점 디스크에서 시작하고 픽셀 위치 x, y 주변에서 무작위로 샘플링된 지점을 향하는 카메라 레이를 생성합니다.
+        
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
             + (self.pixel_delta_u * (offset.x() + x as f64))
             + (self.pixel_delta_v * (offset.y() + y as f64));
-        let ray_direction = pixel_sample - self.center;
 
-        Ray::new(self.center, ray_direction)
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            Self::defocus_disk_sample(&self)
+        };
+        let ray_direction = pixel_sample - ray_origin;
+
+        Ray::new(ray_origin, ray_direction)
     }
 
     fn sample_square() -> Vec3 {
         // [-.5,-.5]-[+.5,+.5] 단위 사각형 내의 무작위 점에 대한 벡터를 반환합니다.
         Vec3(random::<f64>() - 0.5, random::<f64>() - 0.5, 0.0)
+    }
+
+    fn defocus_disk_sample(&self) -> Vec3 {
+        // 카메라 초점 디스크 내에서 무작위 점을 반환합니다.
+        let p = random_in_unit_disk();
+        self.center + (self.defocus_disk_u * p.x()) + (self.defocus_disk_v * p.y())
     }
 }

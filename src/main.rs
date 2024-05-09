@@ -52,6 +52,8 @@ fn main() {
     let lookfrom = Vec3(-2.0, 2.0, 1.0);
     let lookat = Vec3(0.0, 0.0, -1.0);
     let vup = Vec3(0.0, 1.0, 0.0);
+    let defocus_dist = 10.0;
+    let focus_dist = 3.4;
 
     let mut camera = Camera::new(
         aspect_ratio,
@@ -62,7 +64,9 @@ fn main() {
         lookfrom,
         lookat,
         vup,
+        defocus_dist,
+        focus_dist,
     );
 
-    camera.render(&mut world, "result21.png");
+    camera.render(&mut world, "result22.png");
 }
