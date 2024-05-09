@@ -41,7 +41,7 @@ impl Camera {
         let mut writer = self.initialize(path);
 
         for y in 0..self.image_height {
-            eprint!("\r남은 스캔라인: {}", self.image_height - y);
+            eprint!("\r남은 스캔라인: {}            ", self.image_height - y);
             for x in 0..self.image_width {
                 let mut pixel_color = Vec3(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
@@ -100,7 +100,7 @@ impl Camera {
         }
 
         let mut rec = HitRecord::new();
-        if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
+        if world.hit(r, &Interval::new(0.001, f64::INFINITY), &mut rec) {
             let direction = random_on_hamisphere(&rec.normal);
             return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
