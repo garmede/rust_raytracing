@@ -9,7 +9,7 @@ fn main() {
 
     let material_ground = Lambertian::new(Vec3(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(Vec3(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
+    let material_left = Dielectric::new(1.0 / 1.33);
     let material_right = Metal::new(Vec3(0.8, 0.6, 0.2), 1.0);
 
     world.add(Box::new(Sphere::new(
@@ -40,5 +40,5 @@ fn main() {
     let max_depth = 50;
     let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel, max_depth);
 
-    camera.render(&mut world, "result15.png");
+    camera.render(&mut world, "result17.png");
 }
