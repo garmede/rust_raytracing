@@ -48,7 +48,7 @@ fn main() {
     let image_width = 400;
     let sampler_per_pixel = 100;
     let max_depth = 50;
-    let vfov = 90.0;
+    let vfov = 20.0;
     let lookfrom = Vec3(-2.0, 2.0, 1.0);
     let lookat = Vec3(0.0, 0.0, -1.0);
     let vup = Vec3(0.0, 1.0, 0.0);
@@ -64,5 +64,5 @@ fn main() {
         vup,
     );
 
-    camera.render(&mut world, "result20.png");
+    camera.render(&mut world, "result21.png");
 }
