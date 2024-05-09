@@ -10,6 +10,7 @@ pub struct Camera {
     pub aspect_ratio: f64,     // 이미지 너비와 높이의 비율
     pub image_width: u32,      // 렌더링될 이미지 너비(픽셀 수)
     pub sample_per_pixel: u32, // 각 픽셀의 무작위 샘플 수
+    pub max_depth: u32,        // 재귀 깊이
     image_height: u32,         // 이미지 높이
     pixel_samples_scale: f64,  // 픽셀 샘플 합계에 대한 색상 배율
     center: Vec3,              // 카메라 중심
@@ -20,11 +21,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, sample_per_pixel: u32, max_depth: u32) -> Self {
         Self {
             aspect_ratio,
             image_width,
             sample_per_pixel,
+            max_depth,
             image_height: 0,
             pixel_samples_scale: 0.0,
             center: Vec3(0.0, 0.0, 0.0),
@@ -44,7 +46,7 @@ impl Camera {
                 let mut pixel_color = Vec3(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let r = self.get_ray(x, y);
-                    pixel_color += Self::ray_color(&r, world);
+                    pixel_color += Self::ray_color(&r, self.max_depth, world);
                 }
                 pixel_color *= self.pixel_samples_scale;
                 write_color(&mut self.image_buf, &pixel_color);
@@ -92,11 +94,15 @@ impl Camera {
         encoder.write_header().unwrap()
     }
 
-    fn ray_color(r: &Ray, world: &mut HittableList) -> Vec3 {
+    fn ray_color(r: &Ray, depth: u32, world: &mut HittableList) -> Vec3 {
+        if depth == 0 {
+            return Vec3(0.0, 0.0, 0.0);
+        }
+
         let mut rec = HitRecord::new();
         if world.hit(r, &Interval::new(0.0, f64::INFINITY), &mut rec) {
             let direction = random_on_hamisphere(&rec.normal);
-            return Self::ray_color(&Ray::new(rec.p, direction), world) * 0.5;
+            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.5;
         }
 
         // 배경 그라디언트

@@ -19,7 +19,8 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let sampler_per_pixel = 100;
-    let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel);
+    let max_depth = 50;
+    let mut camera = Camera::new(aspect_ratio, image_width, sampler_per_pixel, max_depth);
 
     camera.render(&mut world, "result1.png");
 }

@@ -169,7 +169,7 @@ impl Div for Vec3 {
 }
 
 impl Div<f64> for Vec3 {
-    type Output = Vec3;
+    type Output = Self;
 
     fn div(self, t: f64) -> Vec3 {
         Vec3(self.0 / t, self.1 / t, self.2 / t)
