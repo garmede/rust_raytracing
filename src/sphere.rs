@@ -1,11 +1,25 @@
+use std::rc::Rc;
+
 use raytracing_lib::hittable::*;
 use raytracing_lib::interval::*;
+use raytracing_lib::material::*;
 use raytracing_lib::ray::Ray;
 use raytracing_lib::vec3::*;
 
 pub struct Sphere {
-    pub center: Vec3,
-    pub radius: f64,
+    center: Vec3,
+    radius: f64,
+    mat: Rc<dyn Material>,
+}
+
+impl Sphere {
+    pub fn new(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius: radius.max(0.0),
+            mat,
+        }
+    }
 }
 
 impl Hittable for Sphere {
@@ -30,16 +44,12 @@ impl Hittable for Sphere {
                 return false;
             }
         }
-        // if root <= *ray_tmin || *ray_tmax <= root {
-        //     root = (h + sqrtd) / a;
-        //     if root <= *ray_tmin || *ray_tmax <= root {
-        //         return false;
-        //     }
-        // }
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        rec.normal = (rec.p - self.center) / self.radius;
+        let outward_normal = (rec.p - self.center) / self.radius;
+        rec.set_face_normal(r, &outward_normal);
+        rec.mat = self.mat.clone();
 
         true
     }

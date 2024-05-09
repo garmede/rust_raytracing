@@ -1,10 +1,13 @@
+use rand::prelude::*;
+use std::rc::Rc;
+
 use crate::color::write_color;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
+use crate::material::*;
 use crate::ray::Ray;
 use crate::vec3::*;
-use rand::prelude::*;
 
 pub struct Camera {
     pub aspect_ratio: f64,     // 이미지 너비와 높이의 비율
@@ -99,10 +102,17 @@ impl Camera {
             return Vec3(0.0, 0.0, 0.0);
         }
 
-        let mut rec = HitRecord::new();
+        let mut rec = HitRecord::new(Rc::new(Lambertian::new(Vec3(1.0, 0.0, 1.0))));
+
         if world.hit(r, &Interval::new(0.001, f64::INFINITY), &mut rec) {
-            let direction = rec.normal + random_unit_vector();
-            return Self::ray_color(&Ray::new(rec.p, direction), depth - 1, world) * 0.1;
+            let mut scattered = Ray::new(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+            let mut attenuation = Vec3(0.0, 0.0, 0.0);
+
+            if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * Self::ray_color(&scattered, depth - 1, world);
+            }
+
+            return Vec3(0.0, 0.0, 0.0);
         }
 
         // 배경 그라디언트

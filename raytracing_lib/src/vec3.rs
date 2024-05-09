@@ -9,6 +9,11 @@ impl Vec3 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
 
+    pub fn near_zero(&self) -> bool {
+        const S: f64 = 1e-8;
+        self.0.abs() < S && self.1.abs() < S && self.2.abs() < S
+    }
+
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
@@ -74,6 +79,10 @@ pub fn random_on_hamisphere(normal: &Vec3) -> Vec3 {
     } else {
         return -on_unit_sphere;
     }
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - *n * 2.0 * dot(v, n)
 }
 
 pub fn dot(a: &Vec3, b: &Vec3) -> f64 {
