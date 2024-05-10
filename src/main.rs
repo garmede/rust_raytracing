@@ -24,8 +24,10 @@ fn main() {
             );
 
             if (center - Vec3(4.0, 0.2, 0.0)).length() > 0.9 {
+                let mut center2: Vec3 = Vec3(0.0, 0.0, 0.0);
                 let sphere_material: Rc<dyn Material> = if choose_mat < 0.8 {
                     // diffuse
+                    center2 = center + Vec3(0.0, random_double_range(0.0, 0.5), 0.0);
                     let albedo = random_vec3() * random_vec3();
                     Rc::new(Lambertian::new(albedo))
                 } else if choose_mat < 0.95 {
@@ -37,8 +39,11 @@ fn main() {
                     // glass
                     Rc::new(Dielectric::new(1.5))
                 };
-
-                world.add(Box::new(sphere::Sphere::new(center, 0.2, sphere_material)));
+                if choose_mat < 0.8 {
+                    world.add(Box::new(sphere::Sphere::new_moving(center, center2, 0.2, sphere_material)));
+                } else {
+                    world.add(Box::new(sphere::Sphere::new(center, 0.2, sphere_material)));
+                }
             }
         }
     }
@@ -67,7 +72,7 @@ fn main() {
     // 카메라
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
-    let sampler_per_pixel = 500;
+    let sampler_per_pixel = 100;
     let max_depth = 50;
 
     let vfov = 20.0;
@@ -91,5 +96,5 @@ fn main() {
         focus_dist,
     );
 
-    camera.render(&mut world, "result23.png");
+    camera.render(&mut world, "result2-1.png");
 }
