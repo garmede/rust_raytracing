@@ -33,15 +33,16 @@ impl Interval {
     }
 
     pub fn clamp(&self, t: f64) -> f64 {
-        if t < self.min {
-            return self.min;
-        }
+        t.clamp(self.min, self.max)
+        // if t < self.min {
+        //     return self.min;
+        // }
 
-        if t > self.max {
-            return self.max;
-        }
+        // if t > self.max {
+        //     return self.max;
+        // }
 
-        return t;
+        // return t;
     }
 }
 
