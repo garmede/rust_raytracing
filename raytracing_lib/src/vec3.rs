@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Index, Mul, MulAssign, Neg, Sub};
 
 #[derive(Copy, Clone)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -123,6 +123,19 @@ pub fn cross(a: &Vec3, b: &Vec3) -> Vec3 {
         a.2 * b.0 - a.0 * b.2,
         a.0 * b.1 - a.1 * b.0,
     )
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.0,
+            1 => &self.1,
+            2 => &self.2,
+            _ => panic!("Invalid index"),
+        }
+    }
 }
 
 impl Add for Vec3 {

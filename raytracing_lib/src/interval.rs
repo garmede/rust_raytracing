@@ -34,15 +34,14 @@ impl Interval {
 
     pub fn clamp(&self, t: f64) -> f64 {
         t.clamp(self.min, self.max)
-        // if t < self.min {
-        //     return self.min;
-        // }
+    }
 
-        // if t > self.max {
-        //     return self.max;
-        // }
-
-        // return t;
+    pub fn expand(&self, t: f64) -> Self {
+        let padding = t / 2.0;
+        Self {
+            min: self.min - padding,
+            max: self.max + padding,
+        }
     }
 }
 
